@@ -2,64 +2,378 @@
 <html lang="fr">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8" />
     <title>Prochains départs</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+            display: flex;
+            justify-content: center;
+            padding: 32px 16px;
+        }
+
+        /* Conteneur principal centré */
+        #app {
+            width: 100%;
+            max-width: 1100px;
+            /* limite la largeur pour éviter grand blanc */
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(10, 20, 30, 0.08);
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            min-height: 500px;
+        }
+
+        /* En-tête : titre + formulaire compact */
+        header {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            flex: 0 0 auto;
+        }
+
+        /* Formulaire sur la même ligne */
+        .controls {
+            margin-left: auto;
+            /* pousse vers la droite */
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .controls input[type="text"],
+        .controls input[type="number"] {
+            padding: 8px 10px;
+            border: 1px solid #d7dbe0;
+            border-radius: 6px;
+            width: 220px;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        .controls label {
+            font-size: 13px;
+            color: #333;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            background: #2d9c57;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Contenu principal en deux colonnes : gauche = espace libre / futur contenu, droite = liste */
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* centre horizontalement */
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* Conteneur pour centrer la liste */
+        .centered-list {
+            width: 100%;
+            max-width: 480px;
+            /* largeur max de la liste */
+        }
+
+        /* Notice au-dessus de la liste */
+        .notice {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        ul.departures {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .departure {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: #fff;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(15, 20, 25, 0.04);
+        }
+
+        /* Badge ligne */
+        .line-badge {
+            min-width: 56px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            text-align: center;
+            font-size: 13px;
+            flex: 0 0 auto;
+        }
+
+        .meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1 1 auto;
+        }
+
+        .meta .top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+        }
+
+        .bottom-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .time {
+            font-weight: 700;
+            min-width: 70px;
+        }
+
+        .to {
+            color: #222;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+
+
+        .delay {
+            margin-left: 8px;
+            color: #c82333;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .platform-box {
+            background: #e8e8e8;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 13px;
+            color: #555;
+        }
+
+        /* petite légende / chargement */
+        .footer-info {
+            padding: 12px 24px;
+            color: #666;
+            font-size: 13px;
+            border-top: 1px solid #f0f0f0;
+            text-align: right;
+        }
+
+        /* Responsive : sur écrans petits on empile les colonnes */
+        @media (max-width: 900px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+
+            .right {
+                border-left: none;
+                border-top: 1px solid #f0f0f0;
+                padding-left: 0;
+                padding-top: 16px;
+            }
+
+            .controls input[type="text"] {
+                width: 140px;
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Prochains départs</h1>
+    <div id="app">
+        <header>
+            <h1>Prochains départs</h1>
 
-    <label>
-        Station :
-        <input type="text" id="stationInput" value="Lausanne">
-    </label>
-    <button onclick="loadDepartures()">Rechercher</button>
-    <label>
-        Nb résultats :
-        <input type="int" id="lengthInput" value="15">
-    </label>
+            <div class="controls" role="search">
+                <label>
+                    Station :
+                    <input id="stationInput" type="text" value="Echandens Riaz" />
+                </label>
+                <label>
+                    Nb résultats :
+                    <input id="limitInput" type="number" value="10" min="1" max="50" />
+                </label>
 
-    <ul id="results"></ul>
+                <button class="btn" id="searchBtn">Rechercher</button>
+            </div>
+        </header>
+
+        <main>
+
+            <aside class="right">
+                <ul id="results" class="departures"></ul>
+            </aside>
+        </main>
+
+        <div class="footer-info" id="footerInfo">
+            Dernière mise à jour : — • Rafraîchissement toutes les 30s
+        </div>
+    </div>
 
     <script>
-        function loadDepartures() {
-            const station = document.getElementById('stationInput').value;
-            const lengthLimit = document.getElementById('lengthInput').value;
-            const url = `https://transport.opendata.ch/v1/stationboard?station=${encodeURIComponent(station)}&limit=${encodeURIComponent(lengthLimit)}`;
+        // mapping couleur simple selon category (ajuste comme tu veux)
+        const lineColors = {
+            "IC": "#d9534f",
+            "IR": "#5bc0de",
+            "S": "#2b8be6",
+            "R": "#2b8be6",
+            "RE": "#6f42c1",
+            "B": "#2d9c57",
+            "T": "#f0ad4e",
+            // ajoutes d'autres mappings si tu veux
+        };
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    const list = document.getElementById('results');
-                    list.innerHTML = "";
-
-                    if (!data.stationboard || data.stationboard.length === 0) {
-                        list.innerHTML = "<li>Aucun départ trouvé.</li>";
-                        return;
-                    }
-
-                    data.stationboard.forEach(item => {
-                        const li = document.createElement("li");
-                        const lineNumber = item.number || "—";
-                        const lineCategory = item.category || "—";
-                        const departureTime = new Date(item.stop.departure)
-                            .toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' });
-                        const delayMinutes = item.stop.delay;
-                        const delayText = delayMinutes > 0
-                            ? ` +${delayMinutes}'`
-                            : "    ";
-                        li.textContent = `${departureTime}${delayText} –  ${lineCategory}${lineNumber} → ${item.to} `;
-                        list.appendChild(li);
-                    });
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById('results').innerHTML =
-                        "<li>Erreur lors du chargement.</li>";
-                });
+        function getLineColor(category) {
+            return lineColors[category] || "#6c757d"; // gris si inconnu
         }
+
+        // charge et affiche
+        async function loadDepartures() {
+            const station = document.getElementById('stationInput').value.trim();
+            const limit = parseInt(document.getElementById('limitInput').value) || 10;
+            if (!station) return;
+
+            const url = `https://transport.opendata.ch/v1/stationboard?station=${encodeURIComponent(station)}&limit=${limit}`;
+
+            try {
+                const resp = await fetch(url);
+                const data = await resp.json();
+
+                const ul = document.getElementById('results');
+                ul.innerHTML = "";
+
+                if (!data || !data.stationboard || data.stationboard.length === 0) {
+                    ul.innerHTML = "<li>Aucun départ trouvé.</li>";
+                } else {
+                    data.stationboard.forEach(item => {
+                        const li = document.createElement('li');
+                        li.className = 'departure';
+
+                        // badge
+                        const badge = document.createElement('div');
+                        badge.className = 'line-badge';
+                        const category = item.category || "";
+                        const number = item.number ? item.number : "";
+                        badge.textContent = category + (number ? number : "");
+                        badge.style.background = getLineColor(category);
+
+                        // meta info
+                        const meta = document.createElement('div');
+                        meta.className = 'meta';
+
+                        const top = document.createElement('div');
+                        top.className = 'top';
+
+                        const time = document.createElement('div');
+                        time.className = 'time';
+                        // protège contre undefined departure
+                        const depTime = item.stop && item.stop.departure ? new Date(item.stop.departure) : null;
+                        time.textContent = depTime ? depTime.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' }) : '—';
+
+                        const to = document.createElement('div');
+                        to.className = 'to';
+                        to.textContent = (item.to || '—');
+
+                        top.appendChild(time);
+                        top.appendChild(to);
+
+                        const bottom = document.createElement('div');
+                        bottom.classList.add("bottom-line");
+
+                        const platform = item.stop.platform || "";
+
+                        const delay = (item.stop && (item.stop.delay !== null && item.stop.delay !== undefined)) ? item.stop.delay : null;
+                        if (delay === null) {
+                            bottom.innerHTML = `
+                                <span style="color:#888; font-size:13px;">donnée non dispo</span>
+                                ${platform ? `<span class="platform-box">${platform}</span>` : ""} 
+                            `;
+                        } else if (delay > 0) {
+                            bottom.innerHTML = `
+                                <span class="delay">${"+" + delay + "' "}</span>
+                                ${platform ? `<span class="platform-box">${platform}</span>` : ""}
+                            `;
+                        } else {
+                            bottom.innerHTML = `
+                                    <span style="color:#2b8b57; font-weight:600;">à l’heure</span>
+                                    ${platform ? `<span class="platform-box">${platform}</span>` : ""}
+                            `;
+                        }
+
+                        meta.appendChild(top);
+                        meta.appendChild(bottom);
+
+                        li.appendChild(badge);
+                        li.appendChild(meta);
+                        ul.appendChild(li);
+                    });
+                }
+
+                // footer
+                document.getElementById('footerInfo').textContent = `Dernière mise à jour : ${new Date().toLocaleTimeString()} • Rafraîchissement toutes les 30s`;
+
+            } catch (err) {
+                console.error(err);
+                const ul = document.getElementById('results');
+                ul.innerHTML = '<li class="departure"><div style="padding:12px;color:#c00;">Erreur réseau ou API</div></li>';
+            }
+        }
+
+        // triggers
+        document.getElementById('searchBtn').addEventListener('click', loadDepartures);
+        // Enter dans le champ station lance la recherche
+        document.getElementById('stationInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') loadDepartures();
+        });
+
+        // premier chargement puis intervalle
         loadDepartures();
-        setInterval(loadDepartures, 30000);
+        const refreshInterval = setInterval(loadDepartures, 30000);
     </script>
 </body>
 
