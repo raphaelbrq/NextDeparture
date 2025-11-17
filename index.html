@@ -363,9 +363,13 @@
                         // badge
                         const badge = document.createElement('div');
                         badge.className = 'line-badge';
-                        const category = item.category || "";
-                        const number = item.number ? item.number : "";
-                        badge.textContent = category + " " + (number ? number : "");
+                        let number = item.number ? String(item.number) : "";
+
+                        // Si le numéro dépasse 3 caractères → on ne l'affiche pas
+                        if (number.length > 3) {
+                            number = "";
+                        }
+                        badge.textContent = category + number;
                         badge.style.background = getLineColor(category);
 
                         // meta info
